@@ -696,108 +696,131 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'yomimono_entries_v1';
-const TYPE_EMOJI = { '本':'本', '鑑賞':'鑑', 'いろいろ':'他' };
+const SUPABASE_URL = 'https://wbyheriqjejclnldfhji.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__IE6VC8thX9_ivRTVNQdwQ_peDeAEKW';
 
-let entries = [];
-let currentTab = 'すべて';
-let editingId = null;
-// ─── Load from localStorage ───
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) entries = JSON.parse(raw);
-  } catch(e) {}
-  // seed sample data if empty
-  if (entries.length === 0) {
-    entries = [
-      { id: uid(), type:'本', title:'藪の中', author:'金原ひとみ', status:'進行中', start:'2026-03-09', end:'', rating:0, note:'序盤。50代→若い世代→50代→「理子」という章構成に早くも気づく。', created: Date.now()-100 },
-      { id: uid(), type:'鑑賞', title:'カラオケ行こ！', author:'山下敦弘', status:'読了・鑑賞済', start:'2026-02-10', end:'2026-02-10', rating:4, note:'中学生の狡く愛おしい揺らぎと、ヤクザの哀愁が静かに交差する。', created: Date.now()-200 },
-      { id: uid(), type:'鑑賞', title:'プレデター：バッドランド', author:'ダン・トラクテンバーグ', status:'読了・鑑賞済', start:'2026-03-01', end:'2026-03-01', rating:3, note:'シリーズ内で最も「人間ドラマ」寄りの一作。', created: Date.now()-50 },
-    ];
-    persist();
+async function dbFetch(path, opts) {
+  opts = opts || {};
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    method: opts.method || 'GET',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+    },
+    body: opts.body || undefined,
+  });
+  if (!res.ok) { const t = await res.text(); console.error(t); return null; }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function loadFromDB() {
+  const data = await dbFetch('entries?order=created.desc&select=*');
+  if (data) {
+    entries = data.map(function(r) {
+      return { id: r.id, type: r.type, title: r.title, author: r.author,
+        status: r.status, start: r.start_date, end: r.end_date,
+        note: r.note, cover: r.cover, created: r.created };
+    });
   }
+  render();
 }
 
-function persist() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+async function saveToDB(entry) {
+  var row = { id: entry.id, type: entry.type, title: entry.title, author: entry.author,
+    status: entry.status, start_date: entry.start, end_date: entry.end,
+    note: entry.note, cover: entry.cover || null, created: entry.created };
+  await dbFetch('entries?on_conflict=id', {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates',
+    body: JSON.stringify(row),
+  });
 }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+async function deleteFromDB(id) {
+  await dbFetch('entries?id=eq.' + id, { method: 'DELETE' });
+}
 
-// ─── Tab ───
+const TYPE_EMOJI = { '本': '本', '鑑賞': '鑑', 'いろいろ': '他' };
+
+var entries = [];
+var currentTab = 'すべて';
+var editingId = null;
+
+function load() { loadFromDB(); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
 function setTab(t, el) {
   currentTab = t;
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
   el.classList.add('active');
   render();
 }
 
-// ─── Render ───
 function render() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const filtered = entries.filter(e => {
-    const matchTab =
-      currentTab === 'すべて' ? true :
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  var filtered = entries.filter(function(e) {
+    var matchTab = currentTab === 'すべて' ? true :
       currentTab === '読了・鑑賞済' ? e.status === '読了・鑑賞済' :
-      currentTab === '進行中' ? e.status === '進行中' :
-      e.type === currentTab;
-    const matchQ = !q || [e.title, e.author, e.note].some(s => s && s.toLowerCase().includes(q));
+      currentTab === '進行中' ? e.status === '進行中' : e.type === currentTab;
+    var matchQ = !q || [e.title, e.author, e.note].some(function(s) { return s && s.toLowerCase().includes(q); });
     return matchTab && matchQ;
-  }).sort((a,b) => b.created - a.created);
+  }).sort(function(a, b) { return b.created - a.created; });
 
-  document.getElementById('headerStat').textContent = `${entries.length} records`;
-  const el = document.getElementById('entriesEl');
+  document.getElementById('headerStat').textContent = entries.length + ' records';
+
+  var el = document.getElementById('entriesEl');
   if (filtered.length === 0) {
-    el.innerHTML = `<div class="empty"><p>記録がありません</p></div>`;
+    el.innerHTML = '<div class="empty"><p>記録がありません</p></div>';
     return;
   }
 
-  el.innerHTML = filtered.map(e => {
-    const statusClass = e.status === '読了・鑑賞済' ? 'status-done' : e.status === '進行中' ? 'status-wip' : 'status-plan';
-    const dateStr = [formatDate(e.start), e.end && e.end !== e.start ? formatDate(e.end) : ''].filter(Boolean).join(' → ');
-    return `
-    <div class="entry-card" data-type="${e.type}" data-id="${e.id}" onclick="openDetail('${e.id}')" style="cursor:pointer;">
-      <div class="entry-cover">${e.cover ? '<img src="' + e.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' : TYPE_EMOJI[e.type]}</div>
-      <div class="entry-body">
-        <div class="entry-top">
-          <div class="entry-title">${escHtml(e.title)}</div>
-          <span class="type-badge">${e.type}</span>
-        </div>
-        <div class="entry-meta">${e.author ? escHtml(e.author) + '　' : ''}${dateStr}</div>
-        ${e.note ? `<div class="entry-note">${escHtml(e.note)}</div>` : ''}
-        <span class="entry-status ${statusClass}">${e.status}</span>
-      </div>
-    </div>`;
+  el.innerHTML = filtered.map(function(e) {
+    var statusClass = e.status === '読了・鑑賞済' ? 'status-done' : e.status === '進行中' ? 'status-wip' : 'status-plan';
+    var dateStr = [formatDate(e.start), e.end && e.end !== e.start ? formatDate(e.end) : ''].filter(Boolean).join(' → ');
+    var coverHtml = e.cover ? '<img src="' + e.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' : TYPE_EMOJI[e.type];
+    return '<div class="entry-card" data-type="' + e.type + '" data-id="' + e.id + '" onclick="openDetail(this.dataset.id)" style="cursor:pointer;">' +
+      '<div class="entry-cover">' + coverHtml + '</div>' +
+      '<div class="entry-body">' +
+      '<div class="entry-top"><div class="entry-title">' + escHtml(e.title) + '</div>' +
+      '<span class="type-badge">' + e.type + '</span></div>' +
+      '<div class="entry-meta">' + (e.author ? escHtml(e.author) + '　' : '') + dateStr + '</div>' +
+      (e.note ? '<div class="entry-note">' + escHtml(e.note) + '</div>' : '') +
+      '<span class="entry-status ' + statusClass + '">' + e.status + '</span>' +
+      '</div></div>';
   }).join('');
 }
 
 function formatDate(d) {
   if (!d) return '';
-  const [y, m] = d.split('-');
-  return y + '年' + parseInt(m) + '月';
+  var parts = d.split('-');
+  return parts[0] + '年' + parseInt(parts[1]) + '月';
 }
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ─── Modal ───
 function openModal(entry) {
   editingId = entry ? entry.id : null;
   document.getElementById('modalTitle').textContent = entry ? '記録を編集' : '新しい記録を追加';
-  document.getElementById('fTitle').value = entry?.title || '';
-  document.getElementById('fType').value = entry?.type || '本';
-  document.getElementById('fStatus').value = entry?.status || '読了・鑑賞済';
-  document.getElementById('fAuthor').value = entry?.author || '';
-  document.getElementById('fStart').value = entry?.start || '';
-  document.getElementById('fEnd').value = entry?.end || '';
-  document.getElementById('fNote').value = entry?.note || '';
-  window._editCover = entry?.cover || null;
-  const wrap = document.getElementById('coverPreviewWrap');
-  const prev = document.getElementById('coverPreview');
-  if (entry?.cover) { prev.src = entry.cover; wrap.style.display = 'block'; } else { wrap.style.display = 'none'; prev.src=''; }
+  document.getElementById('fTitle').value = entry ? entry.title || '' : '';
+  document.getElementById('fType').value = entry ? entry.type || '本' : '本';
+  document.getElementById('fStatus').value = entry ? entry.status || '読了・鑑賞済' : '読了・鑑賞済';
+  document.getElementById('fAuthor').value = entry ? entry.author || '' : '';
+  document.getElementById('fStart').value = entry ? entry.start || '' : '';
+  document.getElementById('fEnd').value = entry ? entry.end || '' : '';
+  document.getElementById('fNote').value = entry ? entry.note || '' : '';
+  window._editCover = entry ? entry.cover || null : null;
+  var wrap = document.getElementById('coverPreviewWrap');
+  var prev = document.getElementById('coverPreview');
+  if (entry && entry.cover) { prev.src = entry.cover; wrap.style.display = 'block'; }
+  else { wrap.style.display = 'none'; prev.src = ''; }
   document.getElementById('fCover').value = '';
+  window._newCover = undefined;
   document.getElementById('btnDelete').style.display = entry ? 'block' : 'none';
   document.getElementById('overlay').classList.add('open');
   document.getElementById('fTitle').focus();
@@ -814,12 +837,12 @@ function overlayClick(e) {
   if (e.target === document.getElementById('overlay')) closeModal();
 }
 
-function save() {
-  const title = document.getElementById('fTitle').value.trim();
+async function save() {
+  var title = document.getElementById('fTitle').value.trim();
   if (!title) { document.getElementById('fTitle').focus(); return; }
-  const data = {
+  var data = {
     type: document.getElementById('fType').value,
-    title,
+    title: title,
     author: document.getElementById('fAuthor').value.trim(),
     status: document.getElementById('fStatus').value,
     start: document.getElementById('fStart').value,
@@ -828,62 +851,50 @@ function save() {
     cover: window._newCover !== undefined ? window._newCover : (window._editCover || null),
   };
   if (editingId) {
-    const idx = entries.findIndex(e => e.id === editingId);
-    if (idx !== -1) entries[idx] = { ...entries[idx], ...data };
+    var idx = entries.findIndex(function(e) { return e.id === editingId; });
+    if (idx !== -1) { entries[idx] = Object.assign({}, entries[idx], data); }
+    await saveToDB(entries[idx !== -1 ? idx : 0]);
   } else {
-    entries.unshift({ id: uid(), created: Date.now(), ...data });
+    var newEntry = Object.assign({ id: uid(), created: Date.now() }, data);
+    entries.unshift(newEntry);
+    await saveToDB(newEntry);
   }
-  persist();
   closeModal();
   render();
 }
 
-function editEntry(id) {
-  const e = entries.find(x => x.id === id);
-  if (e) openModal(e);
-}
-
-function deleteEntry(id) {
+async function deleteFromModal() {
   if (!confirm('この記録を削除しますか？')) return;
-  entries = entries.filter(e => e.id !== id);
-  persist();
+  await deleteFromDB(editingId);
+  entries = entries.filter(function(e) { return e.id !== editingId; });
+  closeModal();
   render();
 }
 
-// ─── Detail Page ───
-let currentDetailId = null;
+var currentDetailId = null;
 
 function openDetail(id) {
-  const e = entries.find(x => x.id === id);
+  var e = entries.find(function(x) { return x.id === id; });
   if (!e) return;
   currentDetailId = id;
-  const TYPE_COLOR = { '本':'#D2EECC', '鑑賞':'#E8CCEE', 'いろいろ':'#e8e0d0' };
-  const typeColor = { '本': {bg:'#D2EECC', border:'#8FBF8A', text:'#2a4a27'}, '鑑賞': {bg:'#E8CCEE', border:'#C9A0D4', text:'#4a2a52'}, 'いろいろ': {bg:'#e8e0d0', border:'#c4a97a', text:'#4a3010'} };
-  const tc = typeColor[e.type] || {bg:'#f0ece4', border:'#c4b8a8', text:'#6b5c4a'};
-  const tcStyle = 'color:' + tc.text + ';border-color:' + tc.border + ';background:' + tc.bg;
-  const STATUS_STYLE = {
-    '読了・鑑賞済': tcStyle,
-    '進行中': tcStyle,
-    '予定': 'color:#9a9080;border-color:#c4b8a8;background:#f0ece4',
-  };
-  const dateStr = [formatDate(e.start), e.end && e.end !== e.start ? formatDate(e.end) : ''].filter(Boolean).join(' → ');
-  const color = TYPE_COLOR[e.type] || '#666';
-
-  document.getElementById('detailBody').innerHTML = `
-    <div class="detail-cover-wrap">
-      <div class="detail-cover">
-        ${e.cover ? '<img src="' + e.cover + '">' : '<span>' + TYPE_EMOJI[e.type] + '</span>'}
-      </div>
-      <div class="detail-info">
-        <span class="detail-type-badge" style="background:${color};color:${ e.type==='本' ? '#2a4a27' : e.type==='鑑賞' ? '#4a2a52' : '#4a3010' }">${e.type}</span>
-        <div class="detail-title">${escHtml(e.title)}</div>
-        ${e.author ? '<div class="detail-author">' + escHtml(e.author) + '</div>' : ''}
-        ${dateStr ? '<div class="detail-date">' + dateStr + '</div>' : ''}
-        <span class="detail-status" style="${STATUS_STYLE[e.status] || ''}">${e.status}</span>
-      </div>
-    </div>
-    ${e.note ? '<hr class="detail-divider"><div class="detail-note">' + escHtml(e.note) + '</div>' : ''}
-  `;
+  var typeColor = { '本': {bg:'#D2EECC', border:'#8FBF8A', text:'#2a4a27'}, '鑑賞': {bg:'#E8CCEE', border:'#C9A0D4', text:'#4a2a52'}, 'いろいろ': {bg:'#e8e0d0', border:'#c4a97a', text:'#4a3010'} };
+  var tc = typeColor[e.type] || {bg:'#f0ece4', border:'#c4b8a8', text:'#6b5c4a'};
+  var tcStyle = 'color:' + tc.text + ';border-color:' + tc.border + ';background:' + tc.bg;
+  var STATUS_STYLE = { '読了・鑑賞済': tcStyle, '進行中': tcStyle, '予定': 'color:#9a9080;border-color:#c4b8a8;background:#f0ece4' };
+  var dateStr = [formatDate(e.start), e.end && e.end !== e.start ? formatDate(e.end) : ''].filter(Boolean).join(' → ');
+  var color = tc.bg;
+  var textColor = tc.text;
+  document.getElementById('detailBody').innerHTML =
+    '<div class="detail-cover-wrap">' +
+    '<div class="detail-cover">' + (e.cover ? '<img src="' + e.cover + '">' : '<span>' + TYPE_EMOJI[e.type] + '</span>') + '</div>' +
+    '<div class="detail-info">' +
+    '<span class="detail-type-badge" style="background:' + color + ';color:' + textColor + '">' + e.type + '</span>' +
+    '<div class="detail-title">' + escHtml(e.title) + '</div>' +
+    (e.author ? '<div class="detail-author">' + escHtml(e.author) + '</div>' : '') +
+    (dateStr ? '<div class="detail-date">' + dateStr + '</div>' : '') +
+    '<span class="detail-status" style="' + (STATUS_STYLE[e.status] || '') + '">' + e.status + '</span>' +
+    '</div></div>' +
+    (e.note ? '<hr class="detail-divider"><div class="detail-note">' + escHtml(e.note) + '</div>' : '');
   document.getElementById('detailOverlay').classList.add('open');
 }
 
@@ -893,43 +904,32 @@ function closeDetail() {
 }
 
 function editFromDetail() {
-  const e = entries.find(x => x.id === currentDetailId);
+  var e = entries.find(function(x) { return x.id === currentDetailId; });
   if (e) { closeDetail(); openModal(e); }
 }
 
-function deleteFromModal() {
+async function deleteFromDetail() {
   if (!confirm('この記録を削除しますか？')) return;
-  entries = entries.filter(e => e.id !== editingId);
-  persist();
-  closeModal();
-  render();
-}
-
-function deleteFromDetail() {
-  if (!confirm('この記録を削除しますか？')) return;
-  entries = entries.filter(e => e.id !== currentDetailId);
-  persist();
+  await deleteFromDB(currentDetailId);
+  entries = entries.filter(function(e) { return e.id !== currentDetailId; });
   closeDetail();
   render();
 }
 
-// ─── Cover Preview ───
 function previewCover(input) {
-  const file = input.files[0];
+  var file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
+  var reader = new FileReader();
+  reader.onload = function(e) {
     window._newCover = e.target.result;
-    const prev = document.getElementById('coverPreview');
+    var prev = document.getElementById('coverPreview');
     prev.src = e.target.result;
     document.getElementById('coverPreviewWrap').style.display = 'block';
   };
   reader.readAsDataURL(file);
 }
 
-// ─── Init ───
 load();
-render();
 </script>
 </body>
 </html>
