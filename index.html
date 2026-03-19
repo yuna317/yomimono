@@ -225,8 +225,8 @@
   .entry-card[data-type="ドラマ・TV"]::before { background: var(--stamp-tv); }
 
   .entry-cover {
-    width: 52px;
-    height: 72px;
+    width: 100px;
+    height: 150px;
     flex-shrink: 0;
     background: var(--paper-dark);
     border: 1px solid var(--paper-darker);
@@ -459,6 +459,140 @@
   }
   .empty p { margin-top: 12px; font-size: 0.9rem; }
 
+  /* ─── DETAIL PAGE ─── */
+  .detail-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--paper);
+    z-index: 300;
+    overflow-y: auto;
+    animation: slideInRight 0.22s ease;
+  }
+  @keyframes slideInRight { from { transform: translateX(30px); opacity:0; } to { transform:none; opacity:1; } }
+  .detail-overlay.open { display: block; }
+
+  .detail-header {
+    background: var(--ink);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--paper);
+    font-family: 'Zen Old Mincho', serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.8;
+    padding: 0;
+  }
+  .btn-back:hover { opacity: 1; }
+  .detail-header-actions { display: flex; gap: 8px; }
+  .btn-detail-action {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.25);
+    color: var(--paper);
+    padding: 5px 14px;
+    border-radius: 3px;
+    font-family: 'Zen Old Mincho', serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-detail-action:hover { background: rgba(255,255,255,0.1); }
+  .btn-detail-action.danger { border-color: rgba(200,80,80,0.5); color: #f5a0a0; }
+  .btn-detail-action.danger:hover { background: rgba(200,80,80,0.15); }
+
+  .detail-body {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  .detail-cover-wrap {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    margin-bottom: 28px;
+  }
+  .detail-cover {
+    width: 120px;
+    height: 175px;
+    flex-shrink: 0;
+    background: var(--paper-dark);
+    border: 1px solid var(--paper-darker);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    overflow: hidden;
+  }
+  .detail-cover img { width:100%; height:100%; object-fit:cover; }
+
+  .detail-info { flex: 1; min-width: 0; padding-top: 4px; }
+  .detail-type-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 2px;
+    color: white;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+  .detail-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .detail-author {
+    font-size: 0.9rem;
+    color: var(--ink-light);
+    margin-bottom: 10px;
+  }
+  .detail-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+  .detail-stars { font-size: 1rem; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px; }
+  .detail-status {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+
+  .detail-divider {
+    border: none;
+    border-top: 1px solid var(--paper-darker);
+    margin: 24px 0;
+  }
+  .detail-note {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--ink-light);
+    white-space: pre-wrap;
+  }
+
   /* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--paper-dark); }
@@ -483,9 +617,9 @@
       <button class="tab" onclick="setTab('本',this)">本</button>
       <button class="tab" onclick="setTab('映画',this)">映画</button>
       <button class="tab" onclick="setTab('アニメ',this)">アニメ</button>
-      <button class="tab" onclick="setTab('ドラマ・TV',this)">ドラマ・TV</button>
+      <button class="tab" onclick="setTab('ドラマ・TV',this)">TV</button>
       <button class="tab" onclick="setTab('読了・鑑賞済',this)">済</button>
-      <button class="tab" onclick="setTab('進行中',this)">中</button>
+      <button class="tab" onclick="setTab('進行中',this)">途中</button>
     </div>
     <button class="btn-add" onclick="openModal()">＋ 追加</button>
   </div>
@@ -498,6 +632,13 @@
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="modal" id="modal">
     <h2 id="modalTitle">新しい記録を追加</h2>
+    <div class="form-row">
+      <label>カバー画像</label>
+      <div id="coverPreviewWrap" style="margin-bottom:8px;display:none">
+        <img id="coverPreview" style="width:72px;height:100px;object-fit:cover;border-radius:2px;border:1px solid var(--paper-darker);">
+      </div>
+      <input id="fCover" type="file" accept="image/*" onchange="previewCover(this)" style="font-size:0.82rem;">
+    </div>
     <div class="form-row">
       <label>タイトル</label>
       <input id="fTitle" type="text" placeholder="作品名">
@@ -554,6 +695,18 @@
       <button class="btn-save" onclick="save()">保存する</button>
     </div>
   </div>
+</div>
+
+<!-- DETAIL PAGE -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-header">
+    <button class="btn-back" onclick="closeDetail()">← 戻る</button>
+    <div class="detail-header-actions">
+      <button class="btn-detail-action" onclick="editFromDetail()">編集</button>
+      <button class="btn-detail-action danger" onclick="deleteFromDetail()">削除</button>
+    </div>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
 </div>
 
 <script>
@@ -624,8 +777,8 @@ function render() {
     const statusClass = e.status === '読了・鑑賞済' ? 'status-done' : e.status === '進行中' ? 'status-wip' : 'status-plan';
     const dateStr = [e.start, e.end && e.end !== e.start ? e.end : ''].filter(Boolean).join(' → ');
     return `
-    <div class="entry-card" data-type="${e.type}" data-id="${e.id}">
-      <div class="entry-cover">${TYPE_EMOJI[e.type] || ''}</div>
+    <div class="entry-card" data-type="${e.type}" data-id="${e.id}" onclick="openDetail('${e.id}')" style="cursor:pointer;">
+      <div class="entry-cover">${e.cover ? '<img src="' + e.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' : TYPE_EMOJI[e.type]}</div>
       <div class="entry-body">
         <div class="entry-top">
           <div class="entry-title">${escHtml(e.title)}</div>
@@ -635,10 +788,6 @@ function render() {
         ${stars ? `<div class="stars">${stars}</div>` : ''}
         ${e.note ? `<div class="entry-note">${escHtml(e.note)}</div>` : ''}
         <span class="entry-status ${statusClass}">${e.status}</span>
-        <div class="entry-actions">
-          <button class="btn-icon" title="編集" onclick="editEntry('${e.id}')">編</button>
-          <button class="btn-icon delete" title="削除" onclick="deleteEntry('${e.id}')">削</button>
-        </div>
       </div>
     </div>`;
   }).join('');
@@ -659,6 +808,11 @@ function openModal(entry) {
   document.getElementById('fStart').value = entry?.start || '';
   document.getElementById('fEnd').value = entry?.end || '';
   document.getElementById('fNote').value = entry?.note || '';
+  window._editCover = entry?.cover || null;
+  const wrap = document.getElementById('coverPreviewWrap');
+  const prev = document.getElementById('coverPreview');
+  if (entry?.cover) { prev.src = entry.cover; wrap.style.display = 'block'; } else { wrap.style.display = 'none'; prev.src=''; }
+  document.getElementById('fCover').value = '';
   setStar(entry?.rating || 0, true);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('fTitle').focus();
@@ -667,6 +821,8 @@ function openModal(entry) {
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
   editingId = null;
+  window._newCover = undefined;
+  window._editCover = null;
 }
 
 function overlayClick(e) {
@@ -692,6 +848,7 @@ function save() {
     end: document.getElementById('fEnd').value,
     rating: currentStar,
     note: document.getElementById('fNote').value.trim(),
+    cover: window._newCover !== undefined ? window._newCover : (window._editCover || null),
   };
   if (editingId) {
     const idx = entries.findIndex(e => e.id === editingId);
@@ -714,6 +871,74 @@ function deleteEntry(id) {
   entries = entries.filter(e => e.id !== id);
   persist();
   render();
+}
+
+// ─── Detail Page ───
+let currentDetailId = null;
+
+function openDetail(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  currentDetailId = id;
+  const TYPE_COLOR = { '本':'#4a6741', '映画':'#2c4a6b', 'アニメ':'#6b3a6b', 'ドラマ・TV':'#6b4a1a' };
+  const STATUS_STYLE = {
+    '読了・鑑賞済': 'color:#3a5a3a;border-color:#4a6741;background:#edf4ec',
+    '進行中': 'color:#8b4513;border-color:#c17f50;background:#f0e4d4',
+    '予定': 'color:#9a9080;border-color:#c4b8a8;background:#f0ece4',
+  };
+  const stars = e.rating ? '★'.repeat(e.rating) + '☆'.repeat(5-e.rating) : '';
+  const dateStr = [e.start, e.end && e.end !== e.start ? e.end : ''].filter(Boolean).join(' → ');
+  const color = TYPE_COLOR[e.type] || '#666';
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-cover-wrap">
+      <div class="detail-cover">
+        ${e.cover ? '<img src="' + e.cover + '">' : '<span>' + TYPE_EMOJI[e.type] + '</span>'}
+      </div>
+      <div class="detail-info">
+        <span class="detail-type-badge" style="background:${color}">${e.type}</span>
+        <div class="detail-title">${escHtml(e.title)}</div>
+        ${e.author ? '<div class="detail-author">' + escHtml(e.author) + '</div>' : ''}
+        ${dateStr ? '<div class="detail-date">' + dateStr + '</div>' : ''}
+        ${stars ? '<div class="detail-stars">' + stars + '</div>' : ''}
+        <span class="detail-status" style="${STATUS_STYLE[e.status] || ''}">${e.status}</span>
+      </div>
+    </div>
+    ${e.note ? '<hr class="detail-divider"><div class="detail-note">' + escHtml(e.note) + '</div>' : ''}
+  `;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  currentDetailId = null;
+}
+
+function editFromDetail() {
+  const e = entries.find(x => x.id === currentDetailId);
+  if (e) { closeDetail(); openModal(e); }
+}
+
+function deleteFromDetail() {
+  if (!confirm('この記録を削除しますか？')) return;
+  entries = entries.filter(e => e.id !== currentDetailId);
+  persist();
+  closeDetail();
+  render();
+}
+
+// ─── Cover Preview ───
+function previewCover(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    window._newCover = e.target.result;
+    const prev = document.getElementById('coverPreview');
+    prev.src = e.target.result;
+    document.getElementById('coverPreviewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
 }
 
 // ─── Init ───
