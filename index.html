@@ -899,6 +899,9 @@ function closeDetail() {
 }
 
 function editFromDetail() {
+  var pw = prompt('パスワードを入力してください');
+  if (pw === null) return;
+  if (pw !== '060912') { alert('パスワードが違います'); return; }
   var e = entries.find(function(x) { return x.id === currentDetailId; });
   if (e) { closeDetail(); openModal(e); }
 }
