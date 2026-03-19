@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>yomimono – 私の鑑賞記録</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2a2118;
+    --ink-light: #6b5c4a;
+    --ink-faint: #c4b8a8;
+    --paper: #f5f0e8;
+    --paper-dark: #ede6d8;
+    --paper-darker: #e0d7c6;
+    --accent: #8b4513;
+    --accent-light: #c17f50;
+    --accent-pale: #f0e4d4;
+    --stamp-book: #4a6741;
+    --stamp-film: #2c4a6b;
+    --stamp-anime: #6b3a6b;
+    --stamp-tv: #6b4a1a;
+    --stamp-read: #3a5a3a;
+    --red: #c0392b;
+    --gold: #b8860b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Shippori Mincho', serif;
+    background-color: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 31px,
+        rgba(180,160,130,0.15) 31px,
+        rgba(180,160,130,0.15) 32px
+      );
+    background-attachment: fixed;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--ink);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(42,33,24,0.35);
+  }
+
+  .logo {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    color: var(--paper);
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo span {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    font-style: normal;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    border: 1px solid var(--ink-faint);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .stat-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* ─── FILTERS ─── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    border: 1.5px solid var(--paper-darker);
+    background: white;
+    border-radius: 4px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent-light); }
+  .search-wrap::before {
+    content: '🔍';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 7px 14px;
+    border: 1.5px solid var(--paper-darker);
+    background: var(--paper-dark);
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab:hover { background: var(--paper-darker); }
+  .tab.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  /* ─── ADD BUTTON ─── */
+  .btn-add {
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    padding: 9px 18px;
+    border-radius: 3px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { background: #6e3610; }
+
+  /* ─── COUNT ─── */
+  .count-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+
+  /* ─── ENTRY CARD ─── */
+  .entries {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .entry-card {
+    background: white;
+    border: 1px solid var(--paper-darker);
+    border-radius: 4px;
+    padding: 16px 18px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    position: relative;
+    transition: box-shadow 0.2s;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+  .entry-card:hover { box-shadow: 0 3px 14px rgba(42,33,24,0.1); }
+
+  /* left color bar */
+  .entry-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 4px 0 0 4px;
+  }
+  .entry-card[data-type="本"]::before { background: var(--stamp-book); }
+  .entry-card[data-type="映画"]::before { background: var(--stamp-film); }
+  .entry-card[data-type="アニメ"]::before { background: var(--stamp-anime); }
+  .entry-card[data-type="ドラマ・TV"]::before { background: var(--stamp-tv); }
+
+  .entry-cover {
+    width: 52px;
+    height: 72px;
+    flex-shrink: 0;
+    background: var(--paper-dark);
+    border: 1px solid var(--paper-darker);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    overflow: hidden;
+  }
+  .entry-cover img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .entry-body { flex: 1; min-width: 0; }
+
+  .entry-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .entry-title {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  .type-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    color: white;
+    margin-top: 2px;
+  }
+  [data-type="本"] .type-badge { background: var(--stamp-book); }
+  [data-type="映画"] .type-badge { background: var(--stamp-film); }
+  [data-type="アニメ"] .type-badge { background: var(--stamp-anime); }
+  [data-type="ドラマ・TV"] .type-badge { background: var(--stamp-tv); }
+
+  .entry-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .stars {
+    color: var(--gold);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: inline-block;
+  }
+
+  .entry-note {
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: var(--ink-light);
+    white-space: pre-wrap;
+    border-left: 2px solid var(--paper-darker);
+    padding-left: 10px;
+    margin-top: 4px;
+  }
+
+  .entry-status {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-top: 8px;
+    border: 1px solid;
+  }
+  .status-done { color: var(--stamp-read); border-color: var(--stamp-read); background: #edf4ec; }
+  .status-wip { color: var(--accent); border-color: var(--accent-light); background: var(--accent-pale); }
+  .status-plan { color: var(--ink-faint); border-color: var(--ink-faint); background: var(--paper-dark); }
+
+  .entry-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--paper-darker);
+    border-radius: 3px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-light);
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { background: var(--paper-dark); border-color: var(--ink-faint); }
+  .btn-icon.delete:hover { background: #fdf0f0; border-color: #e88; color: var(--red); }
+
+  /* ─── MODAL ─── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(42,33,24,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--paper);
+    border-radius: 6px;
+    padding: 28px 28px 24px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 31px,
+        rgba(180,160,130,0.18) 31px,
+        rgba(180,160,130,0.18) 32px
+      );
+    box-shadow: 0 8px 40px rgba(42,33,24,0.3);
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(12px); opacity:0; } }
+
+  .modal h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  .form-row {
+    margin-bottom: 14px;
+  }
+  .form-row label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    margin-bottom: 5px;
+  }
+  .form-row input,
+  .form-row select,
+  .form-row textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid var(--paper-darker);
+    border-radius: 3px;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-row input:focus,
+  .form-row select:focus,
+  .form-row textarea:focus { border-color: var(--accent-light); }
+  .form-row textarea { resize: vertical; min-height: 90px; line-height: 1.7; }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .star-input { display: flex; gap: 4px; }
+  .star-btn {
+    font-size: 1.3rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-faint);
+    transition: color 0.1s;
+    line-height: 1;
+  }
+  .star-btn.on { color: var(--gold); }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn-cancel {
+    background: none;
+    border: 1.5px solid var(--paper-darker);
+    padding: 8px 18px;
+    border-radius: 3px;
+    font-family: 'Shippori Mincho', serif;
+    cursor: pointer;
+    color: var(--ink-light);
+  }
+  .btn-cancel:hover { background: var(--paper-dark); }
+  .btn-save {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 3px;
+    font-family: 'Shippori Mincho', serif;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: var(--accent); }
+
+  /* ─── EMPTY STATE ─── */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-faint);
+  }
+  .empty p { margin-top: 12px; font-size: 0.9rem; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--paper-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    yomimono <span>鑑賞記録</span>
+  </div>
+  <div class="header-actions">
+    <span class="stat-chip" id="headerStat"></span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="タイトル・著者・メモで検索…" oninput="render()">
+    </div>
+    <div class="filter-tabs">
+      <button class="tab active" onclick="setTab('すべて',this)">すべて</button>
+      <button class="tab" onclick="setTab('本',this)">📚 本</button>
+      <button class="tab" onclick="setTab('映画',this)">🎬 映画</button>
+      <button class="tab" onclick="setTab('アニメ',this)">✨ アニメ</button>
+      <button class="tab" onclick="setTab('ドラマ・TV',this)">📺 ドラマ・TV</button>
+      <button class="tab" onclick="setTab('読了・鑑賞済',this)">済</button>
+      <button class="tab" onclick="setTab('進行中',this)">中</button>
+    </div>
+    <button class="btn-add" onclick="openModal()">＋ 追加</button>
+  </div>
+
+  <div class="count-line" id="countLine"></div>
+  <div class="entries" id="entriesEl"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <h2 id="modalTitle">新しい記録を追加</h2>
+    <div class="form-row">
+      <label>タイトル</label>
+      <input id="fTitle" type="text" placeholder="作品名">
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0">
+        <label>種類</label>
+        <select id="fType">
+          <option>本</option>
+          <option>映画</option>
+          <option>アニメ</option>
+          <option>ドラマ・TV</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label>ステータス</label>
+        <select id="fStatus">
+          <option value="読了・鑑賞済">読了・鑑賞済</option>
+          <option value="進行中">進行中</option>
+          <option value="予定">予定</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>著者・監督・制作</label>
+      <input id="fAuthor" type="text" placeholder="著者名や監督名など">
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0">
+        <label>開始日</label>
+        <input id="fStart" type="date">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label>終了日</label>
+        <input id="fEnd" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>評価</label>
+      <div class="star-input" id="starInput">
+        <button class="star-btn" data-v="1" onclick="setStar(1)">★</button>
+        <button class="star-btn" data-v="2" onclick="setStar(2)">★</button>
+        <button class="star-btn" data-v="3" onclick="setStar(3)">★</button>
+        <button class="star-btn" data-v="4" onclick="setStar(4)">★</button>
+        <button class="star-btn" data-v="5" onclick="setStar(5)">★</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>メモ・感想</label>
+      <textarea id="fNote" placeholder="感じたこと、印象に残ったシーン、引用など…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-save" onclick="save()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'yomimono_entries_v1';
+const TYPE_EMOJI = { '本':'📚', '映画':'🎬', 'アニメ':'✨', 'ドラマ・TV':'📺' };
+
+let entries = [];
+let currentTab = 'すべて';
+let editingId = null;
+let currentStar = 0;
+
+// ─── Load from localStorage ───
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) entries = JSON.parse(raw);
+  } catch(e) {}
+  // seed sample data if empty
+  if (entries.length === 0) {
+    entries = [
+      { id: uid(), type:'本', title:'藪の中', author:'金原ひとみ', status:'進行中', start:'2026-03-09', end:'', rating:0, note:'序盤。50代→若い世代→50代→「理子」という章構成に早くも気づく。', created: Date.now()-100 },
+      { id: uid(), type:'映画', title:'カラオケ行こ！', author:'山下敦弘', status:'読了・鑑賞済', start:'2026-02-10', end:'2026-02-10', rating:4, note:'中学生の狡く愛おしい揺らぎと、ヤクザの哀愁が静かに交差する。', created: Date.now()-200 },
+      { id: uid(), type:'映画', title:'プレデター：バッドランド', author:'ダン・トラクテンバーグ', status:'読了・鑑賞済', start:'2026-03-01', end:'2026-03-01', rating:3, note:'シリーズ内で最も「人間ドラマ」寄りの一作。', created: Date.now()-50 },
+    ];
+    persist();
+  }
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ─── Tab ───
+function setTab(t, el) {
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ─── Render ───
+function render() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = entries.filter(e => {
+    const matchTab =
+      currentTab === 'すべて' ? true :
+      currentTab === '読了・鑑賞済' ? e.status === '読了・鑑賞済' :
+      currentTab === '進行中' ? e.status === '進行中' :
+      e.type === currentTab;
+    const matchQ = !q || [e.title, e.author, e.note].some(s => s && s.toLowerCase().includes(q));
+    return matchTab && matchQ;
+  }).sort((a,b) => b.created - a.created);
+
+  document.getElementById('countLine').textContent = `${filtered.length} 件`;
+  document.getElementById('headerStat').textContent = `${entries.length} records`;
+
+  const el = document.getElementById('entriesEl');
+  if (filtered.length === 0) {
+    el.innerHTML = `<div class="empty"><div style="font-size:2rem">📖</div><p>記録がありません</p></div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(e => {
+    const stars = e.rating ? '★'.repeat(e.rating) + '☆'.repeat(5-e.rating) : '';
+    const statusClass = e.status === '読了・鑑賞済' ? 'status-done' : e.status === '進行中' ? 'status-wip' : 'status-plan';
+    const dateStr = [e.start, e.end && e.end !== e.start ? e.end : ''].filter(Boolean).join(' → ');
+    return `
+    <div class="entry-card" data-type="${e.type}" data-id="${e.id}">
+      <div class="entry-cover">${TYPE_EMOJI[e.type] || '📝'}</div>
+      <div class="entry-body">
+        <div class="entry-top">
+          <div class="entry-title">${escHtml(e.title)}</div>
+          <span class="type-badge">${e.type}</span>
+        </div>
+        <div class="entry-meta">${e.author ? escHtml(e.author) + '　' : ''}${dateStr}</div>
+        ${stars ? `<div class="stars">${stars}</div>` : ''}
+        ${e.note ? `<div class="entry-note">${escHtml(e.note)}</div>` : ''}
+        <span class="entry-status ${statusClass}">${e.status}</span>
+        <div class="entry-actions">
+          <button class="btn-icon" title="編集" onclick="editEntry('${e.id}')">✏️</button>
+          <button class="btn-icon delete" title="削除" onclick="deleteEntry('${e.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── Modal ───
+function openModal(entry) {
+  editingId = entry ? entry.id : null;
+  document.getElementById('modalTitle').textContent = entry ? '記録を編集' : '新しい記録を追加';
+  document.getElementById('fTitle').value = entry?.title || '';
+  document.getElementById('fType').value = entry?.type || '本';
+  document.getElementById('fStatus').value = entry?.status || '読了・鑑賞済';
+  document.getElementById('fAuthor').value = entry?.author || '';
+  document.getElementById('fStart').value = entry?.start || '';
+  document.getElementById('fEnd').value = entry?.end || '';
+  document.getElementById('fNote').value = entry?.note || '';
+  setStar(entry?.rating || 0, true);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('fTitle').focus();
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  editingId = null;
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+function setStar(n, silent) {
+  currentStar = n;
+  document.querySelectorAll('.star-btn').forEach(b => {
+    b.classList.toggle('on', parseInt(b.dataset.v) <= n);
+  });
+}
+
+function save() {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { document.getElementById('fTitle').focus(); return; }
+  const data = {
+    type: document.getElementById('fType').value,
+    title,
+    author: document.getElementById('fAuthor').value.trim(),
+    status: document.getElementById('fStatus').value,
+    start: document.getElementById('fStart').value,
+    end: document.getElementById('fEnd').value,
+    rating: currentStar,
+    note: document.getElementById('fNote').value.trim(),
+  };
+  if (editingId) {
+    const idx = entries.findIndex(e => e.id === editingId);
+    if (idx !== -1) entries[idx] = { ...entries[idx], ...data };
+  } else {
+    entries.unshift({ id: uid(), created: Date.now(), ...data });
+  }
+  persist();
+  closeModal();
+  render();
+}
+
+function editEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (e) openModal(e);
+}
+
+function deleteEntry(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  entries = entries.filter(e => e.id !== id);
+  persist();
+  render();
+}
+
+// ─── Init ───
+load();
+render();
+</script>
+</body>
+</html>
