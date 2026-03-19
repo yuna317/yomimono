@@ -616,7 +616,8 @@
       <button class="tab" data-type="本" onclick="setTab('本',this)">本</button>
       <button class="tab" data-type="鑑賞" onclick="setTab('鑑賞',this)">鑑賞</button>
       <button class="tab" data-type="いろいろ" onclick="setTab('いろいろ',this)">いろいろ</button>
-      <button class="tab" onclick="setTab('読了・鑑賞済',this)">done</button>
+      <button class="tab" onclick="setTab('完',this)">完</button>
+      <button class="tab" onclick="setTab('完＋感想',this)">完＋感想</button>
       <button class="tab" onclick="setTab('進行中',this)">in progress</button>
     </div>
     <button class="btn-add" onclick="openModal()">＋ 追加</button>
@@ -652,7 +653,8 @@
       <div class="form-row" style="margin-bottom:0">
         <label>ステータス</label>
         <select id="fStatus">
-          <option value="読了・鑑賞済">読了・鑑賞済</option>
+          <option value="完">完</option>
+          <option value="完＋感想">完＋感想</option>
           <option value="進行中">進行中</option>
           <option value="予定">予定</option>
         </select>
@@ -758,7 +760,7 @@ function render() {
   var q = document.getElementById('searchInput').value.trim().toLowerCase();
   var filtered = entries.filter(function(e) {
     var matchTab = currentTab === 'すべて' ? true :
-      currentTab === '読了・鑑賞済' ? e.status === '読了・鑑賞済' :
+      currentTab === '完' ? e.status === '完' : currentTab === '完＋感想' ? e.status === '完＋感想' :
       currentTab === '進行中' ? e.status === '進行中' : e.type === currentTab;
     var matchQ = !q || [e.title, e.author, e.note].some(function(s) { return s && s.toLowerCase().includes(q); });
     return matchTab && matchQ;
@@ -773,7 +775,7 @@ function render() {
   }
 
   el.innerHTML = filtered.map(function(e) {
-    var statusClass = e.status === '読了・鑑賞済' ? 'status-done' : e.status === '進行中' ? 'status-wip' : 'status-plan';
+    var statusClass = (e.status === '完' || e.status === '完＋感想') ? 'status-done' : e.status === '進行中' ? 'status-wip' : 'status-plan';
     var dateStr = [formatDate(e.start), e.end && e.end !== e.start ? formatDate(e.end) : ''].filter(Boolean).join(' → ');
     var coverHtml = e.cover ? '<img src="' + e.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:2px;">' : TYPE_EMOJI[e.type];
     return '<div class="entry-card" data-type="' + e.type + '" data-id="' + e.id + '" onclick="openDetail(this.dataset.id)" style="cursor:pointer;">' +
@@ -802,7 +804,7 @@ function openModal(entry) {
   document.getElementById('modalTitle').textContent = entry ? '記録を編集' : '新しい記録を追加';
   document.getElementById('fTitle').value = entry ? entry.title || '' : '';
   document.getElementById('fType').value = entry ? entry.type || '本' : '本';
-  document.getElementById('fStatus').value = entry ? entry.status || '読了・鑑賞済' : '読了・鑑賞済';
+  document.getElementById('fStatus').value = entry ? entry.status || '完' : '完';
   document.getElementById('fAuthor').value = entry ? entry.author || '' : '';
   document.getElementById('fStart').value = entry ? entry.start || '' : '';
 
@@ -873,7 +875,7 @@ function openDetail(id) {
   var typeColor = { '本': {bg:'#D2EECC', border:'#8FBF8A', text:'#2a4a27'}, '鑑賞': {bg:'#E8CCEE', border:'#C9A0D4', text:'#4a2a52'}, 'いろいろ': {bg:'#e8e0d0', border:'#c4a97a', text:'#4a3010'} };
   var tc = typeColor[e.type] || {bg:'#f0ece4', border:'#c4b8a8', text:'#6b5c4a'};
   var tcStyle = 'color:' + tc.text + ';border-color:' + tc.border + ';background:' + tc.bg;
-  var STATUS_STYLE = { '読了・鑑賞済': tcStyle, '進行中': tcStyle, '予定': 'color:#9a9080;border-color:#c4b8a8;background:#f0ece4' };
+  var STATUS_STYLE = { '完': tcStyle, '完＋感想': tcStyle, '進行中': tcStyle, '予定': 'color:#9a9080;border-color:#c4b8a8;background:#f0ece4' };
   var dateStr = [formatDate(e.start), e.end && e.end !== e.start ? formatDate(e.end) : ''].filter(Boolean).join(' → ');
   var color = tc.bg;
   var textColor = tc.text;
