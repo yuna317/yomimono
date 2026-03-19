@@ -620,7 +620,7 @@
       <button class="tab" onclick="setTab('完＋感想',this)">完＋感想</button>
       <button class="tab" onclick="setTab('進行中',this)">in progress</button>
     </div>
-    <button class="btn-add" onclick="openModal()">＋ 追加</button>
+    <button class="btn-add" onclick="openModalWithAuth()">＋ 追加</button>
   </div>
 
   <div class="entries" id="entriesEl"></div>
@@ -797,6 +797,13 @@ function formatDate(d) {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function openModalWithAuth() {
+  var pw = prompt('パスワードを入力してください');
+  if (pw === null) return;
+  if (pw !== '060912') { alert('パスワードが違います'); return; }
+  openModal(null);
 }
 
 function openModal(entry) {
