@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>yomimono – 私の鑑賞記録</title>
+<title>yomimono</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Klee+One&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #2a2118;
@@ -29,7 +29,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     background-color: var(--paper);
     color: var(--ink);
     min-height: 100vh;
@@ -58,7 +58,7 @@
   }
 
   .logo {
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     font-style: italic;
     font-size: 1.6rem;
     color: var(--paper);
@@ -118,7 +118,7 @@
     border: 1.5px solid var(--paper-darker);
     background: white;
     border-radius: 4px;
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     font-size: 0.9rem;
     color: var(--ink);
     outline: none;
@@ -169,7 +169,7 @@
     border: none;
     padding: 9px 18px;
     border-radius: 3px;
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     font-size: 0.88rem;
     cursor: pointer;
     display: flex;
@@ -367,7 +367,7 @@
   @keyframes slideUp { from { transform: translateY(12px); opacity:0; } }
 
   .modal h2 {
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     font-style: italic;
     font-size: 1.2rem;
     margin-bottom: 20px;
@@ -392,7 +392,7 @@
     padding: 8px 12px;
     border: 1.5px solid var(--paper-darker);
     border-radius: 3px;
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     font-size: 0.9rem;
     color: var(--ink);
     background: white;
@@ -434,7 +434,7 @@
     border: 1.5px solid var(--paper-darker);
     padding: 8px 18px;
     border-radius: 3px;
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     cursor: pointer;
     color: var(--ink-light);
   }
@@ -445,7 +445,7 @@
     border: none;
     padding: 8px 20px;
     border-radius: 3px;
-    font-family: 'Klee One', serif;
+    font-family: 'Zen Old Mincho', serif;
     cursor: pointer;
     transition: background 0.15s;
   }
@@ -483,12 +483,12 @@
     </div>
     <div class="filter-tabs">
       <button class="tab active" onclick="setTab('すべて',this)">すべて</button>
-      <button class="tab" onclick="setTab('本',this)">📚 本</button>
-      <button class="tab" onclick="setTab('映画',this)">🎬 映画</button>
-      <button class="tab" onclick="setTab('アニメ',this)">✨ アニメ</button>
-      <button class="tab" onclick="setTab('ドラマ・TV',this)">📺 ドラマ・TV</button>
+      <button class="tab" onclick="setTab('本',this)">本</button>
+      <button class="tab" onclick="setTab('映画',this)">映画</button>
+      <button class="tab" onclick="setTab('アニメ',this)">アニメ</button>
+      <button class="tab" onclick="setTab('ドラマ・TV',this)">TV</button>
       <button class="tab" onclick="setTab('読了・鑑賞済',this)">済</button>
-      <button class="tab" onclick="setTab('進行中',this)">中</button>
+      <button class="tab" onclick="setTab('進行中',this)">途中</button>
     </div>
     <button class="btn-add" onclick="openModal()">＋ 追加</button>
   </div>
