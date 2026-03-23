@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>yomimono</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -96,11 +96,12 @@
     align-items: center;
     flex-wrap: wrap;
     margin-bottom: 24px;
+    justify-content: space-between;
   }
 
   .search-wrap {
     flex: 1;
-    min-width: 44px; max-width: 44px;
+    min-width: 100%; max-width: 100%;
     position: relative;
   }
   .search-wrap input {
@@ -592,6 +593,18 @@
     white-space: pre-wrap;
   }
 
+  input, textarea {
+    font-size: 16px !important;
+  }
+  select {
+    font-size: 0.75rem !important;
+  }
+  #sortSelect {
+    font-size: 0.75rem !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
   /* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--paper-dark); }
@@ -607,20 +620,28 @@
 </header>
 
 <div class="container">
-  <div class="toolbar">
-    <div class="search-wrap">
+  <div style="margin-bottom:10px;">
+    <div class="search-wrap" style="max-width:100%;">
       <input type="text" id="searchInput" placeholder="" oninput="render()">
     </div>
-    <div class="filter-tabs">
-      <button class="tab active" onclick="setTab('すべて',this)">すべて</button>
-      <button class="tab" data-type="本" onclick="setTab('本',this)">本</button>
-      <button class="tab" data-type="鑑賞" onclick="setTab('鑑賞',this)">鑑賞</button>
-      <button class="tab" data-type="いろいろ" onclick="setTab('いろいろ',this)">いろいろ</button>
-      <button class="tab" onclick="setTab('完',this)">完</button>
-      <button class="tab" onclick="setTab('完＋感想',this)">完＋感想</button>
-      <button class="tab" onclick="setTab('進行中',this)">in progress</button>
-    </div>
+  </div>
+  <div class="filter-tabs" style="margin-bottom:8px;">
+    <button class="tab active" onclick="setTab('すべて',this)">すべて</button>
+    <button class="tab" data-type="本" onclick="setTab('本',this)">本</button>
+    <button class="tab" data-type="鑑賞" onclick="setTab('鑑賞',this)">鑑賞</button>
+    <button class="tab" data-type="いろいろ" onclick="setTab('いろいろ',this)">いろいろ</button>
+  </div>
+  <div class="filter-tabs" style="margin-bottom:10px;">
+    <button class="tab" onclick="setTab('完',this)">完</button>
+    <button class="tab" onclick="setTab('完＋感想',this)">完＋感想</button>
+    <button class="tab" onclick="setTab('進行中',this)">in progress</button>
+  </div>
+  <div class="toolbar">
     <button class="btn-add" onclick="openModalWithAuth()">＋ 追加</button>
+    <select id="sortSelect" onchange="render()" style="padding:7px 14px;border:1.5px solid var(--paper-darker);background:var(--paper-dark);border-radius:3px;font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.06em;color:var(--ink-light);cursor:pointer;outline:none;height:36px;">
+      <option value="created">更新順</option>
+      <option value="release">発売・公開年</option>
+    </select>
   </div>
 
   <div class="entries" id="entriesEl"></div>
@@ -664,9 +685,15 @@
       <label>著者・監督・制作</label>
       <input id="fAuthor" type="text" placeholder="著者名や監督名など">
     </div>
-    <div class="form-row">
-      <label>年</label>
-      <input id="fStart" type="text" placeholder="例：2026" maxlength="4" style="width:120px;">
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0">
+        <label>記録年</label>
+        <input id="fStart" type="text" placeholder="例：2026" maxlength="4">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label>発売・公開年</label>
+        <input id="fRelease" type="text" placeholder="例：2024" maxlength="4">
+      </div>
     </div>
     <div class="form-row">
       <label>メモ・感想</label>
@@ -718,7 +745,7 @@ async function loadFromDB() {
     entries = data.map(function(r) {
       return { id: r.id, type: r.type, title: r.title, author: r.author,
         status: r.status, start: r.start_date, end: r.end_date,
-        note: r.note, cover: r.cover, created: r.created };
+        note: r.note, cover: r.cover, created: r.created, release: r.release };
     });
   }
   render();
@@ -727,7 +754,7 @@ async function loadFromDB() {
 async function saveToDB(entry) {
   var row = { id: entry.id, type: entry.type, title: entry.title, author: entry.author,
     status: entry.status, start_date: entry.start, end_date: entry.end,
-    note: entry.note, cover: entry.cover || null, created: entry.created };
+    note: entry.note, cover: entry.cover || null, created: entry.created, release: entry.release || null };
   await dbFetch('entries?on_conflict=id', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates',
@@ -764,7 +791,16 @@ function render() {
       currentTab === '進行中' ? e.status === '進行中' : e.type === currentTab;
     var matchQ = !q || [e.title, e.author, e.note].some(function(s) { return s && s.toLowerCase().includes(q); });
     return matchTab && matchQ;
-  }).sort(function(a, b) { return b.created - a.created; });
+  });
+  var sortBy = document.getElementById('sortSelect') ? document.getElementById('sortSelect').value : 'created';
+  filtered.sort(function(a, b) {
+    if (sortBy === 'release') {
+      var ra = parseInt(a.release) || 0;
+      var rb = parseInt(b.release) || 0;
+      return rb - ra;
+    }
+    return b.created - a.created;
+  });
 
   document.getElementById('headerStat').textContent = entries.length + ' records';
 
@@ -783,7 +819,7 @@ function render() {
       '<div class="entry-body">' +
       '<div class="entry-top"><div class="entry-title">' + escHtml(e.title) + '</div>' +
       '<span class="type-badge">' + e.type + '</span></div>' +
-      '<div class="entry-meta">' + (e.author ? escHtml(e.author) + '　' : '') + dateStr + '</div>' +
+      '<div class="entry-meta">' + (e.author ? escHtml(e.author) + '　' : '') + (e.release ? e.release + '　' : '') + dateStr + '</div>' +
       (e.note ? '<div class="entry-note">' + escHtml(e.note) + '</div>' : '') +
       '<span class="entry-status ' + statusClass + '">' + e.status + '</span>' +
       '</div></div>';
@@ -816,6 +852,7 @@ function openModal(entry) {
   document.getElementById('fStart').value = entry ? entry.start || '' : '';
 
   document.getElementById('fNote').value = entry ? entry.note || '' : '';
+  document.getElementById('fRelease').value = entry ? entry.release || '' : '';
   window._editCover = entry ? entry.cover || null : null;
   var wrap = document.getElementById('coverPreviewWrap');
   var prev = document.getElementById('coverPreview');
@@ -850,6 +887,7 @@ async function save() {
     start: document.getElementById('fStart').value,
     end: '',
     note: document.getElementById('fNote').value.trim(),
+    release: document.getElementById('fRelease').value.trim(),
     cover: window._newCover !== undefined ? window._newCover : (window._editCover || null),
   };
   if (editingId) {
@@ -893,7 +931,7 @@ function openDetail(id) {
     '<span class="detail-type-badge" style="background:' + color + ';color:' + textColor + '">' + e.type + '</span>' +
     '<div class="detail-title">' + escHtml(e.title) + '</div>' +
     (e.author ? '<div class="detail-author">' + escHtml(e.author) + '</div>' : '') +
-    (dateStr ? '<div class="detail-date">' + dateStr + '</div>' : '') +
+    (e.release ? '<div class="detail-date">' + e.release + '</div>' : '') + (dateStr ? '<div class="detail-date">' + dateStr + '</div>' : '') +
     '<span class="detail-status" style="' + (STATUS_STYLE[e.status] || '') + '">' + e.status + '</span>' +
     '</div></div>' +
     (e.note ? '<hr class="detail-divider"><div class="detail-note">' + escHtml(e.note) + '</div>' : '');
