@@ -833,6 +833,21 @@ function formatDate(d) {
   return d.split('-')[0];
 }
 
+function normalizeDate(d) {
+  if (!d) return '';
+  // 2024年3月15日 → 2024-03-15
+  var m = d.match(/(\d{4})[年\-\/](\d{1,2})[月\-\/]?(\d{1,2})?[日]?/);
+  if (m) {
+    var y = m[1];
+    var mo = m[2] ? ('0' + m[2]).slice(-2) : null;
+    var day = m[3] ? ('0' + m[3]).slice(-2) : null;
+    if (mo && day) return y + '-' + mo + '-' + day;
+    if (mo) return y + '-' + mo;
+    return y;
+  }
+  return d;
+}
+
 function formatRelease(d) {
   if (!d) return '';
   var parts = d.split('-');
@@ -898,7 +913,7 @@ async function save() {
     start: document.getElementById('fStart').value,
     end: '',
     note: document.getElementById('fNote').value.trim(),
-    release: document.getElementById('fRelease').value.trim(),
+    release: normalizeDate(document.getElementById('fRelease').value.trim()),
     cover: window._newCover !== undefined ? window._newCover : (window._editCover || null),
   };
   if (editingId) {
