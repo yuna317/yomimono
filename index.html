@@ -819,7 +819,7 @@ function render() {
       '<div class="entry-body">' +
       '<div class="entry-top"><div class="entry-title">' + escHtml(e.title) + '</div>' +
       '<span class="type-badge">' + e.type + '</span></div>' +
-      '<div class="entry-meta">' + (e.author ? escHtml(e.author) + '　' : '') + (e.release ? formatRelease(e.release) + '　' : '') + dateStr + '</div>' +
+      '<div class="entry-meta">' + (e.author ? escHtml(e.author) + '　' : '') + (e.start ? e.start : '') + '</div>' +
       (e.note ? '<div class="entry-note">' + escHtml(e.note) + '</div>' : '') +
       '<span class="entry-status ' + statusClass + '">' + e.status + '</span>' +
       '</div></div>';
@@ -834,10 +834,10 @@ function formatDate(d) {
 function formatRelease(d) {
   if (!d) return '';
   var parts = d.split('-');
-  var y = parts[0];
+  var y = parts[0] + '年';
   var m = parts[1] ? parseInt(parts[1]) + '月' : '';
   var day = parts[2] ? parseInt(parts[2]) + '日' : '';
-  return y + '年' + m + day;
+  return y + m + day;
 }
 
 function escHtml(s) {
@@ -940,7 +940,7 @@ function openDetail(id) {
     '<span class="detail-type-badge" style="background:' + color + ';color:' + textColor + '">' + e.type + '</span>' +
     '<div class="detail-title">' + escHtml(e.title) + '</div>' +
     (e.author ? '<div class="detail-author">' + escHtml(e.author) + '</div>' : '') +
-    (e.release ? '<div class="detail-date">' + formatRelease(e.release) + '</div>' : '') + (dateStr ? '<div class="detail-date">' + dateStr + '</div>' : '') +
+    (e.start ? '<div class="detail-date">' + e.start + '</div>' : '') +
     '<span class="detail-status" style="' + (STATUS_STYLE[e.status] || '') + '">' + e.status + '</span>' +
     '</div></div>' +
     (e.note ? '<hr class="detail-divider"><div class="detail-note">' + escHtml(e.note) + '</div>' : '');
